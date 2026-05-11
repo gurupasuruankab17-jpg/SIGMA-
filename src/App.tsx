@@ -118,6 +118,17 @@ export default function App() {
     { id: 7, title: 'Asesmen', icon: CheckSquare },
   ];
 
+  const stepColors: Record<number, any> = {
+    1: { name: 'blue', active: 'bg-blue-600 text-white shadow-md', pastBtn: 'bg-blue-50 text-blue-700 hover:bg-blue-100', pastIcon: 'text-blue-600', nextBtn: 'bg-emerald-600 hover:bg-emerald-700 text-white', prevBtn: 'bg-slate-200 hover:bg-slate-300 text-slate-800' },
+    2: { name: 'emerald', active: 'bg-emerald-600 text-white shadow-md', pastBtn: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100', pastIcon: 'text-emerald-600', nextBtn: 'bg-cyan-600 hover:bg-cyan-700 text-white', prevBtn: 'bg-blue-100 hover:bg-blue-200 text-blue-800' },
+    3: { name: 'cyan', active: 'bg-cyan-600 text-white shadow-md', pastBtn: 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100', pastIcon: 'text-cyan-600', nextBtn: 'bg-amber-500 hover:bg-amber-600 text-white', prevBtn: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' },
+    4: { name: 'amber', active: 'bg-amber-500 text-white shadow-md', pastBtn: 'bg-amber-50 text-amber-700 hover:bg-amber-100', pastIcon: 'text-amber-600', nextBtn: 'bg-teal-600 hover:bg-teal-700 text-white', prevBtn: 'bg-cyan-100 hover:bg-cyan-200 text-cyan-800' },
+    5: { name: 'teal', active: 'bg-teal-600 text-white shadow-md', pastBtn: 'bg-teal-50 text-teal-700 hover:bg-teal-100', pastIcon: 'text-teal-600', nextBtn: 'bg-pink-600 hover:bg-pink-700 text-white', prevBtn: 'bg-amber-100 hover:bg-amber-200 text-amber-800' },
+    6: { name: 'pink', active: 'bg-pink-600 text-white shadow-md', pastBtn: 'bg-pink-50 text-pink-700 hover:bg-pink-100', pastIcon: 'text-pink-600', nextBtn: 'bg-fuchsia-600 hover:bg-fuchsia-700 text-white', prevBtn: 'bg-teal-100 hover:bg-teal-200 text-teal-800' },
+    7: { name: 'fuchsia', active: 'bg-fuchsia-600 text-white shadow-md', pastBtn: 'bg-fuchsia-50 text-fuchsia-700 hover:bg-fuchsia-100', pastIcon: 'text-fuchsia-600', nextBtn: 'bg-slate-800 hover:bg-slate-700 text-white', prevBtn: 'bg-pink-100 hover:bg-pink-200 text-pink-800' },
+  };
+
+
   const updateIdentitas = (field: keyof Identitas, value: string) => {
     setData(prev => ({ ...prev, identitas: { ...prev.identitas, [field]: value } }));
   };
@@ -348,16 +359,19 @@ Susun dalam format Markdown:
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sticky top-6">
             <h3 className="font-bold text-slate-800 mb-4 px-2 hidden md:block">Tahapan</h3>
             <div className="flex overflow-x-auto md:flex-col gap-1 scrollbar-hide pb-2 md:pb-0">
-              {steps.map((step) => (
+              {steps.map((step) => {
+                const colors = stepColors[step.id];
+                return (
                 <button 
                   key={step.id}
                   onClick={() => setActiveStep(step.id)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition text-sm whitespace-nowrap md:whitespace-normal text-left ${activeStep === step.id ? 'bg-indigo-600 text-white shadow-md' : activeStep > step.id ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' : 'text-slate-500 hover:bg-slate-50'}`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition text-sm whitespace-nowrap md:whitespace-normal text-left ${activeStep === step.id ? colors.active : activeStep > step.id ? colors.pastBtn : 'text-slate-500 hover:bg-slate-50'}`}
                 >
-                  <step.icon size={18} className={activeStep === step.id ? 'text-white' : activeStep > step.id ? 'text-indigo-600' : 'text-slate-400'} />
+                  <step.icon size={18} className={activeStep === step.id ? 'text-white' : activeStep > step.id ? colors.pastIcon : 'text-slate-400'} />
                   <span>{step.title}</span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         </aside>
@@ -389,7 +403,7 @@ Susun dalam format Markdown:
 
             {/* Tahap 1: Identitas */}
             <div className={activeStep === 1 ? 'block' : 'hidden print:block'}>
-              <h3 className="font-bold text-xl mb-4 text-indigo-900 border-b-2 border-indigo-100 pb-2 print:text-black print:border-none">A. IDENTITAS MODUL</h3>
+              <h3 className="font-bold text-xl mb-4 text-blue-900 border-b-2 border-blue-100 pb-2 print:text-black print:border-none">A. IDENTITAS MODUL</h3>
               
               {stepModes[1] === 'preview' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -496,7 +510,7 @@ Susun dalam format Markdown:
               </div>
               )}
               <div className="mt-8 flex justify-end print:hidden">
-                <button onClick={() => setActiveStep(2)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
+                <button onClick={() => setActiveStep(2)} className={`${stepColors[1].nextBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
               </div>
             </div>
 
@@ -726,14 +740,14 @@ Susun dalam format Markdown:
               </div>
               </>)}
               <div className="mt-8 flex justify-end gap-3 flex-wrap print:hidden pb-4 border-t border-slate-100 pt-6">
-                <button onClick={() => setActiveStep(1)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
-                <button onClick={() => setActiveStep(3)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
+                <button onClick={() => setActiveStep(1)} className={`${stepColors[2].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                <button onClick={() => setActiveStep(3)} className={`${stepColors[2].nextBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
               </div>
             </div>
 
             {/* Tahap 3: CP & Materi */}
             <div className={activeStep === 3 ? 'block' : 'hidden print:block'}>
-              <h3 className="font-bold text-xl mt-8 mb-4 text-blue-900 border-b-2 border-blue-100 pb-2 print:text-black print:border-none">C. CAPAIAN PEMBELAJARAN (CP) & MATERI</h3>
+              <h3 className="font-bold text-xl mt-8 mb-4 text-cyan-900 border-b-2 border-cyan-100 pb-2 print:text-black print:border-none">C. CAPAIAN PEMBELAJARAN (CP) & MATERI</h3>
               
               {stepModes[3] === 'preview' ? (
                 <div className="bg-slate-50 p-5 rounded-xl border border-slate-100 mb-6 text-sm">
@@ -774,8 +788,8 @@ Susun dalam format Markdown:
               )}
 
               <div className="mt-8 flex justify-end gap-3 flex-wrap print:hidden">
-                <button onClick={() => setActiveStep(2)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
-                <button onClick={() => setActiveStep(4)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
+                <button onClick={() => setActiveStep(2)} className={`${stepColors[3].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                <button onClick={() => setActiveStep(4)} className={`${stepColors[3].nextBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
               </div>
             </div>
 
@@ -877,17 +891,17 @@ Susun dalam format Markdown:
                   )}
 
                   <div className="mt-8 flex flex-wrap gap-3 justify-end print:hidden">
-                      <button onClick={() => setActiveStep(3)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                      <button onClick={() => setActiveStep(3)} className={`${stepColors[4].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
                       <button onClick={handleGenerateTP} disabled={loading} className="text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-lg transition">
                         {loading ? <Loader2 className="animate-spin" size={18}/> : 'Regenerate'}
                       </button>
-                      <button onClick={() => setActiveStep(5)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
+                      <button onClick={() => setActiveStep(5)} className={`${stepColors[4].nextBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
                   </div>
                 </div>
               ) : (
                 <div className="text-center py-12 border-2 border-dashed border-amber-200 rounded-xl print:hidden">
                    <p className="text-amber-600 font-medium mb-4">Belum ada data. Klik tombol Generate AI untuk menghasilkan Tujuan Pembelajaran, Model dan Sintaks secara otomatis.</p>
-                   <button onClick={() => setActiveStep(3)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 mx-auto mt-4"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                   <button onClick={() => setActiveStep(3)} className={`${stepColors[4].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 mx-auto mt-4 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
                 </div>
               )}
             </div>
@@ -913,20 +927,20 @@ Susun dalam format Markdown:
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.modulAjar}</ReactMarkdown>
                     )}
                     <div className="mt-8 flex flex-wrap gap-3 justify-end not-prose print:hidden border-t border-slate-100 pt-6">
-                        <button onClick={() => setActiveStep(4)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                        <button onClick={() => setActiveStep(4)} className={`${stepColors[5].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
                         <button onClick={handleGenerateModul} disabled={loading} className="text-teal-600 hover:text-teal-700 font-semibold flex items-center gap-2 px-4 py-2 bg-teal-50 rounded-lg transition">
                           {loading ? <Loader2 className="animate-spin" size={18}/> : 'Regenerate'}
                         </button>
                         <button onClick={handlePrint} className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition">
                           <Printer size={18}/> Cetak Dokumen
                         </button>
-                        <button onClick={() => setActiveStep(6)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
+                        <button onClick={() => setActiveStep(6)} className={`${stepColors[5].nextBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
                     </div>
                  </div>
               ) : (
                 <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl print:hidden">
                    <p className="text-slate-500 mb-2">Pastikan Tujuan Pembelajaran telah di-generate sebelumnya.</p>
-                   <button onClick={() => setActiveStep(4)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 mx-auto mt-4"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                   <button onClick={() => setActiveStep(4)} className={`${stepColors[5].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 mx-auto mt-4 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
                 </div>
               )}
             </div>
@@ -952,20 +966,20 @@ Susun dalam format Markdown:
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.lkpd}</ReactMarkdown>
                     )}
                     <div className="mt-8 flex flex-wrap gap-3 justify-end not-prose print:hidden border-t border-slate-100 pt-6">
-                        <button onClick={() => setActiveStep(5)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                        <button onClick={() => setActiveStep(5)} className={`${stepColors[6].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
                         <button onClick={handleGenerateLKPD} disabled={loading} className="text-pink-600 hover:text-pink-700 font-semibold flex items-center gap-2 px-4 py-2 bg-pink-50 rounded-lg transition">
                           {loading ? <Loader2 className="animate-spin" size={18}/> : 'Regenerate'}
                         </button>
                         <button onClick={handlePrint} className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition">
                           <Printer size={18}/> Cetak Dokumen
                         </button>
-                        <button onClick={() => setActiveStep(7)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
+                        <button onClick={() => setActiveStep(7)} className={`${stepColors[6].nextBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><span className="hidden sm:inline">Selanjutnya</span> <ChevronRight size={18}/></button>
                     </div>
                  </div>
               ) : (
                 <div className="text-center py-12 border-2 border-dashed border-pink-200 rounded-xl print:hidden">
                    <p className="text-pink-600 font-medium">Klik Generate LKPD untuk menyusun aktivitas kelompok/individu yang menarik.</p>
-                   <button onClick={() => setActiveStep(5)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 mx-auto mt-4"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                   <button onClick={() => setActiveStep(5)} className={`${stepColors[6].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 mx-auto mt-4 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
                 </div>
               )}
             </div>
@@ -991,7 +1005,7 @@ Susun dalam format Markdown:
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.asesmen}</ReactMarkdown>
                     )}
                     <div className="mt-8 flex flex-wrap gap-3 justify-end not-prose print:hidden border-t border-slate-100 pt-6">
-                        <button onClick={() => setActiveStep(6)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                        <button onClick={() => setActiveStep(6)} className={`${stepColors[7].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
                         <button onClick={handleGenerateAsesmen} disabled={loading} className="text-fuchsia-600 hover:text-fuchsia-700 font-semibold flex items-center gap-2 px-4 py-2 bg-fuchsia-50 rounded-lg transition">
                           {loading ? <Loader2 className="animate-spin" size={18}/> : 'Regenerate'}
                         </button>
@@ -1003,7 +1017,7 @@ Susun dalam format Markdown:
               ) : (
                 <div className="text-center py-12 border-2 border-dashed border-fuchsia-200 rounded-xl print:hidden">
                    <p className="text-fuchsia-600 font-medium">Hasilkan instrumen asesmen lengkap (Diagnostik, Formatif, Sumatif).</p>
-                   <button onClick={() => setActiveStep(6)} className="bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 mx-auto mt-4"><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
+                   <button onClick={() => setActiveStep(6)} className={`${stepColors[7].prevBtn} px-4 sm:px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 mx-auto mt-4 transition`}><ChevronLeft size={18}/><span className="hidden sm:inline">Sebelumnya</span></button>
                 </div>
               )}
             </div>
