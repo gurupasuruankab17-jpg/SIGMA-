@@ -2,8 +2,7 @@ import React, { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AppState, Identitas, Pengaturan, CapaianMateri } from './types';
-import { generateContentObj, generateContentText } from './lib/gemini';
-import { Type } from '@google/genai/web';
+import { generateContentObj, generateContentText, Type } from './lib/gemini';
 import { 
   BookOpen, Users, ClipboardList, PenTool, 
   FileText, CheckSquare, Settings, Printer, ChevronRight, ChevronLeft, CheckCircle2, Loader2, Key, X,
@@ -185,8 +184,9 @@ Susun sintaks pembelajaran sesuai dengan model ${data.pengaturan.modelPembelajar
         setData(prev => ({ ...prev, tujuanPembelajaran: result }));
         setActiveStep(5);
       }
-    } catch (e) {
-      alert('Gagal menghasilkan Tujuan Pembelajaran.');
+    } catch (e: any) {
+      alert('Gagal menghasilkan Tujuan Pembelajaran: ' + (e.message || 'Error tidak diketahui'));
+      console.error(e);
     }
     setLoading(false);
   };
@@ -243,7 +243,8 @@ Format dalam Markdown yang rapi dan profesional.`;
       setData(prev => ({ ...prev, modulAjar: result }));
       setActiveStep(6);
     } catch (e: any) {
-      alert('Gagal menghasilkan Modul Ajar: ' + (e.message || ''));
+      alert('Gagal menghasilkan Modul Ajar: ' + (e.message || 'Error tidak diketahui'));
+      console.error(e);
     }
     setLoading(false);
   };
@@ -274,7 +275,8 @@ Format dengan Markdown yang rapi.`;
       setData(prev => ({ ...prev, lkpd: result }));
       setActiveStep(7);
     } catch (e: any) {
-      alert('Gagal menghasilkan LKPD: ' + (e.message || ''));
+      alert('Gagal menghasilkan LKPD: ' + (e.message || 'Error tidak diketahui'));
+      console.error(e);
     }
     setLoading(false);
   };
@@ -315,7 +317,8 @@ Susun dalam format Markdown:
       const result = await generateContentText(prompt, getApiKey());
       setData(prev => ({ ...prev, asesmen: result }));
     } catch (e: any) {
-      alert('Gagal menghasilkan Asesmen: ' + (e.message || ''));
+      alert('Gagal menghasilkan Asesmen: ' + (e.message || 'Error tidak diketahui'));
+      console.error(e);
     }
     setLoading(false);
   };

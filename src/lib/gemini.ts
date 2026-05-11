@@ -1,7 +1,15 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
-
 // Default model to use
 const MODEL_NAME = "gemini-2.5-flash";
+
+export enum Type {
+  STRING = "string",
+  NUMBER = "number",
+  INTEGER = "integer",
+  BOOLEAN = "boolean",
+  ARRAY = "array",
+  OBJECT = "object",
+}
+
 
 /**
  * Get a rotated API key from env or fallback to default
@@ -9,7 +17,16 @@ const MODEL_NAME = "gemini-2.5-flash";
 export function getRotatedApiKey(customApiKey?: string): string | undefined {
   if (customApiKey) return customApiKey;
   
-  const envKeysString = import.meta.env?.VITE_GEMINI_API_KEYS || process.env.GEMINI_API_KEYS;
+  let envKeysString = undefined;
+  try {
+    envKeysString = import.meta.env?.VITE_GEMINI_API_KEYS;
+  } catch (e) {
+    // Ignore
+  }
+  
+  if (!envKeysString && typeof process !== 'undefined' && process.env) {
+    envKeysString = process.env.GEMINI_API_KEYS;
+  }
   let keys: string[] = [];
   if (envKeysString && envKeysString.trim() !== '') {
     keys = envKeysString.split(',').map((k: string) => k.trim()).filter((k: string) => k);
@@ -47,24 +64,40 @@ export function getRotatedApiKey(customApiKey?: string): string | undefined {
 /**
  * Generate structured JSON content using Gemini
  */
-export async function generateContentObj(prompt: string, schema: Schema, customApiKey?: string) {
+export async function generateContentObj(prompt: string, schema: any, customApiKey?: string, retries = 3): Promise<any> {
   const apiKey = getRotatedApiKey(customApiKey);
   if (!apiKey) throw new Error("API Key tidak ditemukan.");
-  const ai = new GoogleGenAI({ apiKey });
+  
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: schema,
-        temperature: 0.7,
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          responseMimeType: "application/json",
+          responseSchema: schema,
+        },
+      }),
     });
-    
-    if (!response.text) return null;
-    return JSON.parse(response.text);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`API Error (${response.status}): ${errText}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) return null;
+    return JSON.parse(text);
   } catch (error) {
+    if (retries > 0) {
+      console.warn(`Generating JSON content failed. Retrying... (${retries} attempts left)`);
+      return generateContentObj(prompt, schema, customApiKey, retries - 1);
+    }
     console.error("Error generating JSON content:", error);
     throw error;
   }
@@ -73,20 +106,37 @@ export async function generateContentObj(prompt: string, schema: Schema, customA
 /**
  * Generate standard text/markdown content using Gemini
  */
-export async function generateContentText(prompt: string, customApiKey?: string) {
+export async function generateContentText(prompt: string, customApiKey?: string, retries = 3): Promise<string | undefined> {
   const apiKey = getRotatedApiKey(customApiKey);
   if (!apiKey) throw new Error("API Key tidak ditemukan.");
-  const ai = new GoogleGenAI({ apiKey });
+  
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: prompt,
-      config: {
-        temperature: 0.7,
-      }
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+        },
+      }),
     });
-    return response.text;
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`API Error (${response.status}): ${errText}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text;
   } catch (error) {
+    if (retries > 0) {
+      console.warn(`Generating text content failed. Retrying... (${retries} attempts left)`);
+      return generateContentText(prompt, customApiKey, retries - 1);
+    }
     console.error("Error generating text content:", error);
     throw error;
   }
