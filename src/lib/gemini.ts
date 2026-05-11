@@ -30,18 +30,25 @@ export function getAvailableApiKeys(customApiKeys?: string[] | string): string[]
       // Ignore
     }
     
-    if (!envKeysString && typeof process !== 'undefined' && process.env) {
-      envKeysString = process.env.GEMINI_API_KEYS;
-    }
+    // Safely check for process environment (for Node.js compatibility if needed later)
+    try {
+      if (!envKeysString && typeof process !== 'undefined' && process.env) {
+        envKeysString = process.env?.GEMINI_API_KEYS;
+      }
+    } catch(e) {}
+
     if (envKeysString && envKeysString.trim() !== '') {
       keys = envKeysString.split(',').map((k: string) => k.trim()).filter((k: string) => k);
     }
   }
   
   if (keys.length === 0) {
-    if (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) {
-      keys = [process.env.GEMINI_API_KEY];
-    } else {
+    try {
+      if (typeof process !== 'undefined' && process.env && process.env?.GEMINI_API_KEY) {
+        keys = [process.env.GEMINI_API_KEY];
+      }
+    } catch(e) {}
+    if (keys.length === 0) {
       try {
          if (import.meta.env?.VITE_GEMINI_API_KEY) {
             keys = [import.meta.env.VITE_GEMINI_API_KEY];
