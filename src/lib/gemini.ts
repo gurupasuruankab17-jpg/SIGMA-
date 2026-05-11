@@ -2,12 +2,12 @@
 const MODEL_NAME = "gemini-2.5-flash";
 
 export enum Type {
-  STRING = "string",
-  NUMBER = "number",
-  INTEGER = "integer",
-  BOOLEAN = "boolean",
-  ARRAY = "array",
-  OBJECT = "object",
+  STRING = "STRING",
+  NUMBER = "NUMBER",
+  INTEGER = "INTEGER",
+  BOOLEAN = "BOOLEAN",
+  ARRAY = "ARRAY",
+  OBJECT = "OBJECT",
 }
 
 
@@ -61,7 +61,7 @@ export function getRotatedApiKey(customApiKey?: string): string | undefined {
  */
 export async function generateContentObj(prompt: string, schema: any, customApiKey?: string, retries = 3): Promise<any> {
   const apiKey = getRotatedApiKey(customApiKey);
-  if (!apiKey) throw new Error("API Key tidak ditemukan.");
+  if (!apiKey) throw new Error("API Key tidak ditemukan. Silakan masukkan Gemini API Key di menu Pengaturan (ikon Settings).");
   
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`, {
@@ -103,7 +103,7 @@ export async function generateContentObj(prompt: string, schema: any, customApiK
  */
 export async function generateContentText(prompt: string, customApiKey?: string, retries = 3): Promise<string | undefined> {
   const apiKey = getRotatedApiKey(customApiKey);
-  if (!apiKey) throw new Error("API Key tidak ditemukan.");
+  if (!apiKey) throw new Error("API Key tidak ditemukan. Silakan masukkan Gemini API Key di menu Pengaturan (ikon Settings).");
   
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`, {
