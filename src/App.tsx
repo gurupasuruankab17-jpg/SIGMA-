@@ -1,12 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AppState, Identitas, Pengaturan, CapaianMateri } from './types';
 import { generateContentObj, generateContentText, Type } from './lib/gemini';
+import { supabase } from './lib/supabase';
 import { 
   BookOpen, Users, ClipboardList, PenTool, 
   FileText, CheckSquare, Settings, Printer, ChevronRight, ChevronLeft, CheckCircle2, Loader2, Key, X,
-  UserCheck, LayoutTemplate, MonitorPlay, Heart
+  UserCheck, LayoutTemplate, MonitorPlay, Heart, CloudUpload
 } from 'lucide-react';
 
 const INITIAL_STATE: AppState = {
@@ -69,9 +70,26 @@ export default function App() {
   const [activeSettingsTab, setActiveSettingsTab] = useState(1);
   const [data, setData] = useState<AppState>(INITIAL_STATE);
   const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customApiKeys, setCustomApiKeys] = useState('');
   const [apiKeys, setApiKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchApiKeys = async () => {
+      try {
+        const { data: dbKeys, error } = await supabase.from('api_keys').select('api_key');
+        if (dbKeys && dbKeys.length > 0) {
+          const keys = dbKeys.map((d: any) => d.api_key);
+          setApiKeys(keys);
+          setCustomApiKeys(keys.join('\n'));
+        }
+      } catch (err) {
+        console.error("Gagal memuat API Keys:", err);
+      }
+    };
+    fetchApiKeys();
+  }, []);
 
   
   const [stepModes, setStepModes] = useState<Record<number, 'edit' | 'preview'>>({
@@ -327,6 +345,31 @@ Susun dalam format Markdown:
     window.print();
   };
 
+  const handleSaveToSupabase = async () => {
+    setIsSaving(true);
+    try {
+      const { data: result, error } = await supabase
+        .from('modul_ajar') // You need to have 'modul_ajar' table in Supabase
+        .insert([
+          {
+            sekolah: data.identitas.sekolah,
+            mapel: data.identitas.mapel,
+            materi: data.capaianMateri.materi,
+            data_json: data
+          }
+        ]);
+        
+      if (error) {
+        throw error;
+      }
+      alert('Data berhasil disimpan ke database Supabase!');
+    } catch (e: any) {
+      alert('Gagal menyimpan ke Supabase: ' + (e.message || 'Error tidak diketahui'));
+      console.error(e);
+    }
+    setIsSaving(false);
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 font-sans text-slate-800 flex flex-col">
       {/* Header */}
@@ -345,6 +388,14 @@ Susun dalam format Markdown:
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button 
+              onClick={handleSaveToSupabase}
+              disabled={isSaving}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 transition px-4 py-2 rounded-lg font-semibold text-sm border border-emerald-500 disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <CloudUpload size={18} />}
+              <span className="hidden md:inline">Simpan ke DB</span>
+            </button>
             <button 
               onClick={handlePrint}
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 transition px-4 py-2 rounded-lg font-semibold text-sm border border-indigo-500"
@@ -1115,10 +1166,17 @@ Susun dalam format Markdown:
 
             <div className="p-5 border-t border-slate-200 bg-slate-50 flex justify-end">
               <button 
-                onClick={() => {
+                onClick={async () => {
                   const keys = customApiKeys.split('\n').map(k => k.trim()).filter(k => k);
-                  if (keys.length > 0) {
-                    setApiKeys(keys);
+                  setApiKeys(keys);
+                  try {
+                    await supabase.from('api_keys').delete().neq('api_key', 'some_dummy_value');
+                    if (keys.length > 0) {
+                      const inserts = keys.map(k => ({ api_key: k }));
+                      await supabase.from('api_keys').insert(inserts);
+                    }
+                  } catch (e) {
+                    console.error("Gagal menyimpan API key ke DB", e);
                   }
                   setIsSettingsOpen(false);
                 }} 
