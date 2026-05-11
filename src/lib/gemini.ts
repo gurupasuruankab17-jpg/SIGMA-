@@ -33,28 +33,23 @@ export function getRotatedApiKey(customApiKey?: string): string | undefined {
   }
   
   if (keys.length === 0) {
-    keys = [
-      "AIzaSyB0Fe9P3MaJ8xOt3cqPOId0eUeklcr28q8",
-      "AIzaSyA67jcs2i0lA363sUYTdDXft56lq57Dt_w",
-      "AIzaSyA30FQre53g5Apbm8JHpXN0u9Ts0Y702Wo",
-      "AIzaSyAqbGRXSbJzXZ3qNG3W6lwh3rzk5rEO6Lo",
-      "AIzaSyBPZ8pIT-_mjtkO0X8IhR5dc2Otls8FyoY",
-      "AIzaSyCgwDLsTfgEjC12uUU02TnVg3QWiVRB7d0",
-      "AIzaSyB38kLffX2kMwj3zNU1N1PnJbkZtobZb7k",
-      "AIzaSyC01_x09yPFE0RP0-rpbR3-5-iFp6GuBn0",
-      "AIzaSyB40UvYVgLDIMhmJEkj_DP8dVszhQe3hNo",
-      "AIzaSyASGm5ZYnWhHtAb3g54kt39KONx7x0HzTE",
-      "AIzaSyDV-jNIIju5ZGcTERemv04wnpAttToS6aE",
-      "AIzaSyD6z3wQQgkgi8fQv7t-E-xUtq5MB5u9Tas",
-      "AIzaSyD7I5sq96fIsmJlWn-JsBk0u6pVQ5cmY_U",
-      "AIzaSyDyvVtOQsuMxVmWMSfEEYTm6TAq31JTrCw",
-      "AIzaSyD36JBcb5YKKoAO9U28d7H0HsfkUyhL0RM",
-      "AIzaSyDAAilGLB1y5qe3GjURkhGesp2TzsXs6BE",
-      "AIzaSyBSNMgaJxWHoi9HFupZqGE0GOoBUJA1HDI",
-      "AIzaSyBxnZaA3fF4PSgmb4PWs3-LYdaK4Cu7V1M",
-      "AIzaSyDb5Ai9DHdNHLtaC7geL3K5vxv7JUhTGmY",
-      "AIzaSyCX69uZ0yHCaYf6CeOIIdtTSnCPQ8arpqg",
-    ];
+    if (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) {
+      keys = [process.env.GEMINI_API_KEY];
+    } else {
+      // In web browser with Vite without specific injection
+      try {
+         if (import.meta.env?.VITE_GEMINI_API_KEY) {
+            keys = [import.meta.env.VITE_GEMINI_API_KEY];
+         }
+      } catch (e) {
+         // ignore
+      }
+    }
+  }
+
+  if (keys.length === 0) {
+    console.warn("No GEMINI_API_KEY or GEMINI_API_KEYS provided in environment or settings. Requests will likely fail.");
+    return undefined;
   }
 
   const randomIndex = Math.floor(Math.random() * keys.length);
