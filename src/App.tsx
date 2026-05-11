@@ -7,7 +7,7 @@ import { supabase } from './lib/supabase';
 import { 
   BookOpen, Users, ClipboardList, PenTool, 
   FileText, CheckSquare, Settings, Printer, ChevronRight, ChevronLeft, CheckCircle2, Loader2, Key, X,
-  UserCheck, LayoutTemplate, MonitorPlay, Heart, CloudUpload
+  UserCheck, LayoutTemplate, MonitorPlay, Heart, CloudUpload, Eye, EyeOff
 } from 'lucide-react';
 
 const INITIAL_STATE: AppState = {
@@ -74,15 +74,32 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customApiKeys, setCustomApiKeys] = useState('');
   const [apiKeys, setApiKeys] = useState<string[]>([]);
+  const [showApiKeys, setShowApiKeys] = useState(false);
 
   useEffect(() => {
+    const localKeys = localStorage.getItem('gemini_api_keys');
+    if (localKeys) {
+      try {
+        const parsedKeys = JSON.parse(localKeys);
+        if (Array.isArray(parsedKeys) && parsedKeys.length > 0) {
+          setApiKeys(parsedKeys);
+          setCustomApiKeys(parsedKeys.join('\n'));
+        }
+      } catch (e) {
+        console.error("Error parsing localStorage API keys", e);
+      }
+    }
+
     const fetchApiKeys = async () => {
       try {
         const { data: dbKeys, error } = await supabase.from('api_keys').select('api_key');
-        if (dbKeys && dbKeys.length > 0) {
+        if (error) {
+          console.error("Supabase error fetching API Keys:", error);
+        } else if (dbKeys && dbKeys.length > 0) {
           const keys = dbKeys.map((d: any) => d.api_key);
           setApiKeys(keys);
           setCustomApiKeys(keys.join('\n'));
+          localStorage.setItem('gemini_api_keys', JSON.stringify(keys));
         }
       } catch (err) {
         console.error("Gagal memuat API Keys:", err);
@@ -117,12 +134,6 @@ export default function App() {
     clickTimeoutRef.current = setTimeout(() => {
       setClickCount(0);
     }, 1000);
-  };
-  
-  const getApiKey = () => {
-     if (apiKeys.length === 0) return undefined;
-     const randomIndex = Math.floor(Math.random() * apiKeys.length);
-     return apiKeys[randomIndex];
   };
 
   const steps = [
@@ -197,7 +208,7 @@ Susun sintaks pembelajaran sesuai dengan model ${data.pengaturan.modelPembelajar
         required: ["tp", "metode", "sintaks"]
       };
 
-      const result = await generateContentObj(prompt, schema, getApiKey());
+      const result = await generateContentObj(prompt, schema, apiKeys);
       if (result) {
         setData(prev => ({ ...prev, tujuanPembelajaran: result }));
         setActiveStep(5);
@@ -257,7 +268,7 @@ STRUKTUR MODUL:
 
 Format dalam Markdown yang rapi dan profesional.`;
 
-      const result = await generateContentText(prompt, getApiKey());
+      const result = await generateContentText(prompt, apiKeys);
       setData(prev => ({ ...prev, modulAjar: result }));
       setActiveStep(6);
     } catch (e: any) {
@@ -289,7 +300,7 @@ Gunakan bahasa yang lugas dan to the point.
 Hindari penggunaan titik-titik (.............) yang panjang untuk ruang isian, ganti dengan ruang kosong menggunakan baris baru atau tabel.
 Format dengan Markdown yang rapi.`;
 
-      const result = await generateContentText(prompt, getApiKey());
+      const result = await generateContentText(prompt, apiKeys);
       setData(prev => ({ ...prev, lkpd: result }));
       setActiveStep(7);
     } catch (e: any) {
@@ -332,7 +343,7 @@ Susun dalam format Markdown:
      - 3 soal Pilihan Ganda (HOTS level SD) beserta kunci jawaban.
      - 2 soal Uraian berbasis analisis kasus lengkap dengan rubrik penilaian (Skala 1-4).`;
 
-      const result = await generateContentText(prompt, getApiKey());
+      const result = await generateContentText(prompt, apiKeys);
       setData(prev => ({ ...prev, asesmen: result }));
     } catch (e: any) {
       alert('Gagal menghasilkan Asesmen: ' + (e.message || 'Error tidak diketahui'));
@@ -1151,13 +1162,34 @@ Susun dalam format Markdown:
                     
                     <div className="space-y-3">
                       <div className="mt-4">
-                        <label className="block text-xs font-semibold text-slate-600 mb-1">Daftar Pool API (Satu baris per API Key)</label>
-                        <textarea 
-                          rows={8}
-                          value={customApiKeys}
-                          onChange={(e) => setCustomApiKeys(e.target.value)}
-                          className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded font-mono text-xs focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                        ></textarea>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block text-xs font-semibold text-slate-600">Daftar Pool API (Satu baris per API Key)</label>
+                          <button 
+                            type="button"
+                            onClick={() => setShowApiKeys(!showApiKeys)}
+                            className="text-xs flex items-center gap-1 text-slate-500 hover:text-indigo-600 transition-colors"
+                          >
+                            {showApiKeys ? <><EyeOff size={14}/> Sembunyikan</> : <><Eye size={14}/> Tampilkan</>}
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <textarea 
+                            rows={8}
+                            value={customApiKeys}
+                            onChange={(e) => setCustomApiKeys(e.target.value)}
+                            className={`w-full p-2.5 bg-slate-50 border border-slate-300 rounded font-mono text-xs focus:ring-2 focus:ring-indigo-500 outline-none resize-none transition-all ${
+                              !showApiKeys ? 'blur-[4px] select-none text-slate-500' : 'text-slate-800'
+                            }`}
+                            spellCheck={false}
+                          ></textarea>
+                          {!showApiKeys && (
+                            <div 
+                              className="absolute inset-0 z-10 cursor-pointer" 
+                              onClick={() => setShowApiKeys(true)}
+                              title="Klik untuk melihat/mengedit kunci API"
+                            ></div>
+                          )}
+                        </div>
                       </div>
                     </div>
                  </div>
@@ -1169,13 +1201,27 @@ Susun dalam format Markdown:
                 onClick={async () => {
                   const keys = customApiKeys.split('\n').map(k => k.trim()).filter(k => k);
                   setApiKeys(keys);
+                  localStorage.setItem('gemini_api_keys', JSON.stringify(keys));
                   try {
-                    await supabase.from('api_keys').delete().neq('api_key', 'some_dummy_value');
-                    if (keys.length > 0) {
-                      const inserts = keys.map(k => ({ api_key: k }));
-                      await supabase.from('api_keys').insert(inserts);
+                    const { error: deleteError } = await supabase.from('api_keys').delete().neq('api_key', 'some_dummy_value');
+                    if (deleteError) {
+                      console.error("Gagal menghapus API keys lama:", deleteError);
+                      alert(`Gagal menghapus data lama di DB: ${deleteError.message}. Pastikan RLS diizinkan.`);
                     }
-                  } catch (e) {
+                    if (keys.length > 0) {
+                      const inserts = keys.map(k => ({ 
+                        id: crypto.randomUUID(), 
+                        api_key: k 
+                      }));
+                      const { error: insertError } = await supabase.from('api_keys').insert(inserts);
+                      if (insertError) {
+                        console.error("Gagal insert API keys baru:", insertError);
+                        alert(`Gagal menyimpan ke Database: ${insertError.message}\n\nSolusi: Pastikan tabel "api_keys" ada di Supabase dan RLS (Row Level Security) Disable atau punya policy insert/delete untuk public. \nKey sementara tersimpan di memori browser (Local Storage).`);
+                      } else {
+                         alert("Berhasil menyimpan API Key ke Database dan Local Storage!");
+                      }
+                    }
+                  } catch (e: any) {
                     console.error("Gagal menyimpan API key ke DB", e);
                   }
                   setIsSettingsOpen(false);
